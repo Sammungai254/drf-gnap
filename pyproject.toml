@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "drf-gnap"
@@ -10,7 +10,7 @@ readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
 authors = [
-    { name = "Sam", email = "" },
+    { name = "Sam", email = "sam.mungaike@gmail.com" },
 ]
 keywords = ["django", "drf", "gnap", "oauth", "authentication", "open-payments", "http-signatures", "fintech"]
 classifiers = [
