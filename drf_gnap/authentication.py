@@ -32,6 +32,8 @@ from rest_framework.request import Request
 
 from drf_gnap.gnap_client import GNAPClient, GrantResponse, GrantStatus
 from drf_gnap.token_cache import TokenCache
+from drf_gnap.signatures import sign_request
+
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -53,24 +55,28 @@ class GNAPAuthentication(BaseAuthentication):
     www_authenticate_realm = "api"
     auth_header_prefix = "GNAP"
 
-    def authenticate(self, request: Request):
-        # 1. Try GNAP Authorization header (existing flow)
-        auth_header = request.META.get("HTTP_AUTHORIZATION", "")
-        if auth_header:
-            parts = auth_header.split()
-            if len(parts) == 2:
-                prefix, token_value = parts
-                if prefix.upper() == self.auth_header_prefix:
-                    return self._authenticate_token(request, token_value)
-
-        # 2. Try Signature-based auth (NEW FLOW)
+    def authenticate(self, request):
         signature = request.headers.get("Signature")
+        sig_input = request.headers.get("Signature-Input")
+
         if signature:
-            # For now: accept signature presence (demo mode)
+            # Recompute expected signature
+            expected_headers = sign_request(
+                method=request.method,
+                url=request.build_absolute_uri(),
+                headers={},
+                body=request.body,
+                key="test-key",
+            )
+
+            expected_signature = expected_headers.get("Signature")
+
+            if signature != expected_signature:
+                raise AuthenticationFailed("Invalid signature")
+
             user = self._resolve_user(request, signature)
             return user, signature
 
-        # 3. No auth → reject
         return None
 
     def authenticate_header(self, request: Request) -> str:
